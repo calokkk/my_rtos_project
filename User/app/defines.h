@@ -1,0 +1,11 @@
+typedef enum
+{
+	DEVICE_LED,
+	DEVICE_BUZZER,
+}DEVICE_ID_E;
+
+typedef enum
+{
+	DEVICE_OFF,
+	DEVICE_ON,
+}DEVICE_STATE_E;

@@ -1,0 +1,25 @@
+# 编译生成的中间文件
+build/
+Objects/
+Listings/
+*.o
+*.obj
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+
+# IDE 配置文件（Keil/IAR/CLion/VS Code）
+*.uvoptx
+*.uvprojx
+*.scvd
+*.iar
+.vscode/
+.idea/
+*.swp
+
+# 操作系统生成文件
+*.log
+*.tmp
+*.uvguix.*
