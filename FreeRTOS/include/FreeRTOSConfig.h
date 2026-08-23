@@ -9,7 +9,7 @@
 #define configTICK_RATE_HZ              (1000)  // Tick频率（1ms/tick）
 #define configMAX_PRIORITIES            (16)    // 最大任务优先级（0最低，15最高）
 #define configMINIMAL_STACK_SIZE        (128)   // 空闲任务栈大小
-#define configTOTAL_HEAP_SIZE           ((size_t)(10*1024)) // 堆大小（10KB，按需调整）
+#define configTOTAL_HEAP_SIZE           ((size_t)(14*1024)) // 堆大小（14KB，按需调整）
 #define configMAX_TASK_NAME_LEN         (16)    // 任务名最大长度
 #define configUSE_TRACE_FACILITY        0       // 禁用追踪
 #define configUSE_16_BIT_TICKS          0       // 32位tick计数
@@ -23,7 +23,7 @@
 #define configUSE_TIMERS                1       // 启用软件定时器
 #define configTIMER_TASK_PRIORITY       (configMAX_PRIORITIES - 1) // 定时器任务优先级
 #define configTIMER_QUEUE_LENGTH        10      // 定时器命令队列长度
-#define configTIMER_TASK_STACK_DEPTH    (configMINIMAL_STACK_SIZE) // 定时器任务栈大小
+#define configTIMER_TASK_STACK_DEPTH    (256) // 定时器任务栈大小（按键判定回调在定时器上下文调用OLED，需余量）
 #define configQUEUE_REGISTRY_SIZE       0       // 禁用队列注册
 #define configUSE_MUTEXES               1       // 启用互斥锁
 #define configUSE_RECURSIVE_MUTEXES     1       // 启用递归互斥锁

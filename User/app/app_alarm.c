@@ -19,7 +19,6 @@ static TimerHandle_t xTick1sTimer     = NULL;
 #define ARMING_COUNTDOWN_SEC    3       /* 布防倒计时（秒） */
 #define ALARM_TIMEOUT_SEC       5       /* 报警后 IR 消失等待（秒） */
 #define LOOP_PERIOD_MS          50      /* 主循环周期（毫秒） */
-#define IR_CONFIRM_COUNT        3       /* IR 防抖连续检测次数 */
 
 static void ir_isr_callback(void);
 static void tick_1s_callback(TimerHandle_t xTimer);
@@ -28,7 +27,7 @@ static void tick_1s_callback(TimerHandle_t xTimer);
 
 void app_alarm_init(void)
 {
-    xAlarmEventQueue = xQueueCreate(10, sizeof(ALARM_EVT_E));
+    xAlarmEventQueue = xQueueCreate(20, sizeof(ALARM_EVT_E));
     xOledDispQueue   = xQueueCreate(3,  sizeof(OLED_DISP_T));
 
     /* 1秒滴答定时器，自动重载，向事件队列发送 TICK_1S */
@@ -47,7 +46,7 @@ void Alarm_SendEvent(ALARM_EVT_E evt)
 {
     if (xAlarmEventQueue != NULL)
     {
-        xQueueSend(xAlarmEventQueue, &evt, 0);
+        xQueueSend(xAlarmEventQueue, &evt, pdMS_TO_TICKS(20));
     }
 }
 
@@ -110,38 +109,19 @@ static void oled_disp(ALARM_MODE_E mode, uint8_t countdown, uint8_t ir_status)
 }
 
 /**
- * @brief IR 防抖：连续 N 次读到高电平才确认触发
- * @param count 需连续检测到的次数
- * @return 1=确认触发, 0=未触发
- * @note  最长阻塞 count * LOOP_PERIOD_MS ≈ 150ms
+ * @brief 进入报警模式（由 IR_HIGH 边沿或 TICK_1S 兜底检测触发）
+ * @param mode      当前模式指针，将被置为 ALARM
+ * @param countdown 报警倒计时指针，将被重置
+ * @note  非阻塞实现：不在任务中做长延时，避免事件队列积压
  */
-static uint8_t ir_confirm_high(uint8_t count)
+static void enter_alarm_state(ALARM_MODE_E *mode, uint8_t *countdown)
 {
-    for (uint8_t i = 0; i < count; i++)
-    {
-        if (IR_state_get() == 0)
-        {
-            return 0;
-        }
-        vTaskDelay(pdMS_TO_TICKS(LOOP_PERIOD_MS));
-    }
-    return 1;
-}
-
-/**
- * @brief IR 防抖：连续 N 次读到低电平才确认恢复
- */
-static uint8_t ir_confirm_low(uint8_t count)
-{
-    for (uint8_t i = 0; i < count; i++)
-    {
-        if (IR_state_get() == 1)
-        {
-            return 0;
-        }
-        vTaskDelay(pdMS_TO_TICKS(LOOP_PERIOD_MS));
-    }
-    return 1;
+    *mode      = ALARM_MODE_ALARM;
+    *countdown = ALARM_TIMEOUT_SEC;
+    xTimerReset(xTick1sTimer, 0);  /* 对齐滴答 */
+    LED_SendCmd(LED_BLINK);
+    Buzzer_SendCmd(BUZZER_CMD_BEEP_ALARM);
+    uart_printf("[Alarm] IR triggered! ALARM!\r\n");
 }
 
 /* ========== 告警状态机任务 ========== */
@@ -242,20 +222,20 @@ void Alarm_Task(void *arg)
                 }
                 else if (evt == ALARM_EVT_IR_HIGH)
                 {
-                    /* IR 边沿触发 → 防抖确认 */
-                    ir_status = 1;
-                    if (ir_confirm_high(IR_CONFIRM_COUNT))
+                    /* IR 边沿触发 → 立即读电平确认（非阻塞） */
+                    if (IR_state_get())
                     {
-                        mode      = ALARM_MODE_ALARM;
-                        countdown = ALARM_TIMEOUT_SEC;
-                        xTimerReset(xTick1sTimer, 0);  /* 对齐滴答 */
-                        LED_SendCmd(LED_BLINK);
-                        Buzzer_SendCmd(BUZZER_CMD_BEEP_ALARM);
-                        uart_printf("[Alarm] IR triggered! ALARM!\r\n");
+                        ir_status = 1;
+                        enter_alarm_state(&mode, &countdown);
                     }
-                    else
+                }
+                else if (evt == ALARM_EVT_TICK_1S)
+                {
+                    /* 兜底：布防完成时 IR 已为高（无新边沿）也能在 1s 内报警 */
+                    if (IR_state_get())
                     {
-                        ir_status = 0;
+                        ir_status = 1;
+                        enter_alarm_state(&mode, &countdown);
                     }
                 }
                 break;
@@ -274,11 +254,11 @@ void Alarm_Task(void *arg)
                 }
                 else if (evt == ALARM_EVT_IR_LOW)
                 {
-                    /* 人体离开边沿 → 防抖确认 */
-                    if (ir_confirm_low(IR_CONFIRM_COUNT))
+                    /* 人体离开边沿 → 立即读电平确认（非阻塞），
+                       倒计时由 TICK_1S 兜底驱动 */
+                    if (!IR_state_get())
                     {
                         ir_status = 0;
-                        /* 确认离开，后续由 TICK_1S 倒计时 */
                     }
                 }
                 else if (evt == ALARM_EVT_IR_HIGH)

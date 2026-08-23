@@ -53,7 +53,7 @@ int main(void)
 	app_led_init();
 	app_buzzer_init();
 	app_alarm_init();
-
+	OLED_ShowString(1, 1, "HELLO");
 	// 创建信号量和队列
 	oled_mutex = xSemaphoreCreateMutex();
 	xKeyEventQueue = xQueueCreate(QueueLength, sizeof(KEY_INFO_T));
@@ -68,8 +68,9 @@ int main(void)
 	// xTaskCreate(OLED1_Task, "OLED_Task", 256, NULL, 1, &OLED_TaskHandler);
 	xTaskCreate(OLED2_Task, "OLED_Task", 256, NULL, 1, NULL);
 	xTaskCreate(Key_Task, "KEY_Task", 256, NULL, 1, &KEY_TaskHandler);
-	xTaskCreate(UART_Task, "UART_Task", 512, NULL, 1, NULL);
-	xTaskCreate(Alarm_Task, "Alarm_Task", 512, NULL, 3, NULL);
+	xTaskCreate(UART_Task, "UART_Task", 384, NULL, 1, NULL);
+	xTaskCreate(Alarm_Task, "Alarm_Task", 384, NULL, 3, NULL);
+	xTaskCreate(Buzzer_Task, "Buzzer_Task", 256, NULL, 2, NULL);
 	fsm_start_with_simulate(FSM_STATE_IDLE, 10);
 	vTaskStartScheduler();
 

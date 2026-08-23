@@ -1,17 +1,20 @@
 #include "stm32f10x.h"                  // Device header
 #include "Key.h"
+#include "OLED.h"
+#include "Uart.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
 #include "app/isr.h"
+#include "app/app_alarm.h"
 
 /* 按键引脚定义 */
 #define BTN_PIN         GPIO_Pin_1       /* 按键 GPIO 引脚 */
 #define BTN_PORT        GPIOB            /* 按键 GPIO 端口 */
 
 /* 长短按时间阈值 (ms) */
-#define BTN_SHORT_PRESS_TIME        1000
+#define BTN_SHORT_PRESS_TIME        500
 #define BTN_LONG_PRESS_TIME         5000
 #define BTN_LONG_LONG_PRESS_TIME    10000
 
@@ -35,6 +38,23 @@ static inline uint8_t hal_gpio_read(uint16_t pin)
     return GPIO_ReadInputDataBit(BTN_PORT, pin);
 }
 
+static void key_short_press()
+{
+    uart_printf("[Key] short press\r\n");
+    Alarm_SendEvent(ALARM_EVT_KEY1_SHORT);
+}
+
+static void key_long_press()
+{
+
+}
+
+static void key_long_long_press()
+{
+
+}
+
+
 /**
  * @brief 按键状态定时器回调
  *        管理按钮状态机的状态迁移：
@@ -47,6 +67,7 @@ static void btn_state_handler(TimerHandle_t xTimer)
     {
         case BTN_IDLE:
             btn_state = BTN_PRESSED;
+            key_short_press();
             xTimerChangePeriod(btn_state_timer,
                                pdMS_TO_TICKS(BTN_LONG_PRESS_TIME - BTN_SHORT_PRESS_TIME),
                                0);
@@ -54,6 +75,7 @@ static void btn_state_handler(TimerHandle_t xTimer)
 
         case BTN_PRESSED:
             btn_state = BTN_PRESSED_LONG;
+            key_long_press();
             xTimerChangePeriod(btn_state_timer,
                                pdMS_TO_TICKS(BTN_LONG_LONG_PRESS_TIME - BTN_LONG_PRESS_TIME),
                                0);
@@ -61,6 +83,7 @@ static void btn_state_handler(TimerHandle_t xTimer)
 
         case BTN_PRESSED_LONG:
             btn_state = BTN_PRESSED_LONG_LONG;
+            key_long_long_press();
             xTimerStop(btn_state_timer, 0);
             break;
 
@@ -84,9 +107,9 @@ static void btn_debounce_handler(TimerHandle_t xTimer)
     {
         if (btn_last_state == 0)
         {
-            /* 按下确认：启动状态机定时器 */
             btn_state = BTN_IDLE;
-            xTimerStart(btn_state_timer, pdMS_TO_TICKS(BTN_SHORT_PRESS_TIME));
+            xTimerChangePeriod(btn_state_timer, pdMS_TO_TICKS(BTN_SHORT_PRESS_TIME), 0);
+            xTimerStart(btn_state_timer, 0);
         }
         else
         {
