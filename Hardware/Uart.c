@@ -46,7 +46,7 @@ void uart_init()
     // 配置 NVIC 中断优先级
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 6;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
@@ -129,6 +129,7 @@ void uart_recv_buffer(u8 data)
         if(data_len < 3 || data_len > RECV_BUF_MAX)
         {
             read_idx = 0;   // 长度无效，丢弃整帧
+            data_len = 0;
             return;
         }
     }

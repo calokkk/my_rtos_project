@@ -23,18 +23,24 @@ QueueHandle_t xUartQueue;
 
 void uart_frame_data_handler(uint8_t *buf, uint8_t len)
 {
-    uint8_t send_buf[64];
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    memcpy(send_buf, buf, len);
-    xQueueSendFromISR(xUartQueue, send_buf, NULL);
-    
-    // 调试输出：打印收到的帧内容
-    uart_printf("Recv frame: ");
-    for(uint8_t i = 0; i < len; i++)
+    if(xUartQueue != NULL)
     {
-        uart_printf("0x%02x ", buf[i]);
+        if(xQueueSendFromISR(xUartQueue, buf, &xHigherPriorityTaskWoken)!= pdPASS)
+        {
+            
+        }
     }
-    uart_printf("\r\n");
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    
+    // // 调试输出：打印收到的帧内容
+    // uart_printf("Recv frame: ");
+    // for(uint8_t i = 0; i < len; i++)
+    // {
+    //     uart_printf("0x%02x ", buf[i]);
+    // }
+    // uart_printf("\r\n");
 }
 
 void UART_Task(void *arg)
@@ -54,6 +60,13 @@ void UART_Task(void *arg)
         // 接收队列数据
         if(xQueueReceive(xUartQueue, buf, portMAX_DELAY))
         {
+            uart_printf("Recv frame: ");
+            for (u8 i = 0; i < buf[1]; i++)
+            {
+                uart_printf("0x%02x ", buf[i]);
+            }
+            uart_printf("\r\n");
+
             dev_id = (DEVICE_ID_E)buf[2];
             dev_state = (DEVICE_STATE_E)buf[3];
 
