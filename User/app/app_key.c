@@ -1,4 +1,4 @@
-#include "stm32f10x.h"                  // Device header
+#include "main.h"                  // Device header
 #include "Key.h"
 #include "OLED.h"
 #include "Uart.h"
@@ -9,9 +9,6 @@
 #include "app/isr.h"
 #include "app/app_alarm.h"
 
-/* 按键引脚定义 */
-#define BTN_PIN         GPIO_Pin_1       /* 按键 GPIO 引脚 */
-#define BTN_PORT        GPIOB            /* 按键 GPIO 端口 */
 
 /* 长短按时间阈值 (ms) */
 #define BTN_SHORT_PRESS_TIME        500
@@ -33,9 +30,9 @@ static TimerHandle_t btn_debounce_timer = NULL;
 static TimerHandle_t btn_state_timer    = NULL;
 
 /* 硬件抽象：读取 GPIO 引脚电平 */
-static inline uint8_t hal_gpio_read(uint16_t pin)
+static inline uint8_t hal_gpio_read(void)
 {
-    return GPIO_ReadInputDataBit(BTN_PORT, pin);
+    return HAL_GPIO_ReadPin(KEY_1_GPIO_Port, KEY_1_Pin);
 }
 
 static void key_short_press()
@@ -103,7 +100,7 @@ static void btn_state_handler(TimerHandle_t xTimer)
 static void btn_debounce_handler(TimerHandle_t xTimer)
 {
     (void)xTimer;
-    if (hal_gpio_read(BTN_PIN) == btn_last_state)
+    if (hal_gpio_read() == btn_last_state)
     {
         if (btn_last_state == 0)
         {
@@ -143,7 +140,7 @@ void key_isr_handler(uint8_t key_num, uint8_t state)
 static void btn_init(void)
 {
     btn_state      = BTN_IDLE;
-    btn_last_state = hal_gpio_read(BTN_PIN);
+    btn_last_state = hal_gpio_read();
 
     btn_debounce_timer = xTimerCreate("BtnDebounce",
                                       pdMS_TO_TICKS(50),

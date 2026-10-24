@@ -1,4 +1,5 @@
-#include "isr.h"
+#include "main.h"
+#include "app/isr.h"
 #include <stddef.h>
 
 static key_cb_t key_cb = NULL;
@@ -18,69 +19,22 @@ void ir_exti_callback_register(ir_cb_t cb)
 	ir_exti_cb = cb;
 }
 
-/**
- * @brief 按键中断统一处理入口
- * @param key_num 按键编号: 1=GPIOB_Pin1, 2=GPIOB_Pin11
- *
- * 读取对应 GPIO 引脚电平后，调用已注册的回调函数。
- * 回调函数中可安全调用 FreeRTOS FromISR API（因 NVIC 优先级已调整至允许范围）。
- * 静默失败处理：无回调注册或无效按键编号时直接返回。
- */
-static void key_irq_handler(uint8_t key_num)
-{
-    if (key_cb == NULL)
-        return;
 
-    uint8_t state = 0;
-    switch (key_num)
+/* HAL 统一 EXTI 回调，替代原来的两个 IRQHandler */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    switch (GPIO_Pin)
     {
-        case 1:
-            state = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1);
+        case KEY_1_Pin:
+            if (key_cb) key_cb(1, HAL_GPIO_ReadPin(KEY_1_GPIO_Port, KEY_1_Pin));
             break;
-        case 2:
-            state = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11);
+        case KEY_2_Pin:
+            if (key_cb) key_cb(2, HAL_GPIO_ReadPin(KEY_2_GPIO_Port, KEY_2_Pin));
+            break;
+        case IR_Pin:
+            if (ir_exti_cb) ir_exti_cb();
             break;
         default:
-            return;
+            break;
     }
-
-    key_cb(key_num, state);
-}
-
-/* ========================================================================
- * 按键 EXTI 中断服务例程（强实现，覆盖 stm32f10x_it.c 中的 __weak 默认）
- * ======================================================================== */
-
-/**
- * @brief EXTI Line1 中断处理（按键1：GPIOB Pin1）
- */
-void EXTI1_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
-    {
-        key_irq_handler(1);
-        EXTI_ClearITPendingBit(EXTI_Line1);
-    }
-}
-
-/**
- * @brief EXTI Line15~10 中断处理（按键2：GPIOB Pin11 使用 Line11）
- */
-void EXTI15_10_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line11) != RESET)
-    {
-        key_irq_handler(2);
-        EXTI_ClearITPendingBit(EXTI_Line11);
-    }
-
-    if(EXTI_GetITStatus(EXTI_Line10) != RESET)
-	{
-		EXTI_ClearITPendingBit(EXTI_Line10);
-
-		if(ir_exti_cb != NULL)
-		{
-			ir_exti_cb();
-		}
-	}
 }

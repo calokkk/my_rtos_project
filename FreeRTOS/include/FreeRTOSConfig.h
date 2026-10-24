@@ -4,7 +4,7 @@
 // 1. 内核配置
 #define configUSE_PREEMPTION            1       // 启用抢占式调度
 #define configUSE_IDLE_HOOK             0       // 禁用空闲钩子函数
-#define configUSE_TICK_HOOK             0       // 禁用tick钩子函数
+#define configUSE_TICK_HOOK             1       // 禁用tick钩子函数
 #define configCPU_CLOCK_HZ              (72000000) // STM32系统时钟（F103为72MHz）
 #define configTICK_RATE_HZ              (1000)  // Tick频率（1ms/tick）
 #define configMAX_PRIORITIES            (16)    // 最大任务优先级（0最低，15最高）
