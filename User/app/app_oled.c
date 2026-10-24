@@ -1,4 +1,4 @@
-#include "stm32f10x.h"                  // Device header
+#include "main.h"                  // Device header
 #include "OLED.h"
 #include "FreeRTOS.h"
 #include "task.h"

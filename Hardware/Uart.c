@@ -1,7 +1,10 @@
 #include "Uart.h"
-#include "stm32f10x.h"   
+#include "main.h"
+#include "usart.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
+
 
 #define RECV_BUF_MAX    64
 
@@ -10,9 +13,11 @@ uart_frame_callback uart_frame_cb = NULL;
 
 u8 recv_buf[RECV_BUF_MAX];
 u8 read_idx, write_idx, data_len;
+static uint8_t rx_byte;        /* ← 新增：HAL 接收中断临时缓冲 */
 
 void uart_init()
 {
+#if 0
     // 启用GPIOA时钟
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     // 启用USART2时钟
@@ -50,32 +55,28 @@ void uart_init()
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+#endif
+
+    HAL_UART_Receive_IT(&huart2, &rx_byte, 1);
 }
 
 
 // 发送单个字节
 void uart_send_byte(u8 data)
 {
-    USART_SendData(USART2, data);
-    while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+    HAL_UART_Transmit(&huart2, &data, 1, HAL_MAX_DELAY);
 }
 
 // 发送字节数组
 void uart_send_buffer(u8 *data, u16 len)
 {
-    for(u16 i = 0; i < len; i++)
-    {
-        uart_send_byte(data[i]);
-    }
+    HAL_UART_Transmit(&huart2, data, len, HAL_MAX_DELAY);
 }
 
 // 发送字符串
 void uart_send_string(const char *str)
 {
-    while(*str)
-    {
-        uart_send_byte(*str++);
-    }
+    HAL_UART_Transmit(&huart2, (uint8_t *)str, strlen(str), HAL_MAX_DELAY);
 }
 
 // 实现printf风格的日志函数
@@ -86,11 +87,7 @@ int uart_printf(const char *format, ...)
     va_start(args, format);
     int ret = vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    
-    if(ret > 0)
-    {
-        uart_send_string(buffer);
-    }
+    if (ret > 0) uart_send_string(buffer);
     return ret;
 }
 
@@ -156,21 +153,12 @@ void uart_frame_cb_register(uart_frame_callback cb)
     uart_frame_cb = cb;
 }
 
-
-void USART2_IRQHandler(void)
+/* 接收完成回调（替代原来的 USART2_IRQHandler 手工搬运） */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    // 检查是否是接收中断
-    if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
+    if (huart->Instance == USART2)
     {
-        uint8_t data = USART_ReceiveData(USART2);
-        uart_recv_buffer(data);  // 存入缓冲区
-        // 清除中断标志（读取数据后自动清除，但显式调用更安全）
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-    }
-    
-    // 如果需要处理发送完成中断
-    if(USART_GetITStatus(USART2, USART_IT_TC) != RESET)
-    {
-        USART_ClearITPendingBit(USART2, USART_IT_TC);
+        uart_recv_buffer(rx_byte);
+        HAL_UART_Receive_IT(&huart2, &rx_byte, 1);   /* 重新挂载 */
     }
 }

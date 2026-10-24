@@ -1,4 +1,4 @@
-#include "stm32f10x.h"                  // Device header
+#include "main.h"                  // Device header
 #include "Uart.h"
 #include "LED.h"
 #include "OLED.h"

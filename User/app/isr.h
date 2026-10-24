@@ -1,7 +1,7 @@
 #ifndef __ISR_H
 #define __ISR_H
 
-#include "stm32f10x.h"
+#include "main.h"
 
 /**
  * @brief 按键回调函数类型

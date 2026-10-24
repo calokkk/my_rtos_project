@@ -1,7 +1,7 @@
 #ifndef UART_H
 #define UART_H
 
-#include "stm32f10x.h"
+#include "main.h"
 
 typedef unsigned char u8;
 typedef unsigned short u16;

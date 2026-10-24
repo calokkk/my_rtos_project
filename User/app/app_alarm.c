@@ -1,4 +1,4 @@
-#include "stm32f10x.h"
+#include "main.h"
 #include "IR.h"
 #include "Uart.h"
 #include "FreeRTOS.h"

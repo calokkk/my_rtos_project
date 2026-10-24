@@ -1,0 +1,82 @@
+Build started: Project: my_rtos_project
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'my_rtos_project'
+compiling Uart.c...
+..\Hardware\Uart.c(61): error:  #20: identifier "huart2" is undefined
+      HAL_UART_Transmit(&huart2, &data, 1, HAL_MAX_DELAY);
+..\Hardware\Uart.c(67): error:  #20: identifier "huart2" is undefined
+      HAL_UART_Transmit(&huart2, data, len, HAL_MAX_DELAY);
+..\Hardware\Uart.c(73): error:  #20: identifier "huart2" is undefined
+      HAL_UART_Transmit(&huart2, (uint8_t *)str, strlen(str), HAL_MAX_DELAY);
+..\Hardware\Uart.c(73): warning:  #223-D: function "strlen" declared implicitly
+      HAL_UART_Transmit(&huart2, (uint8_t *)str, strlen(str), HAL_MAX_DELAY);
+..\Hardware\Uart.c(154): error:  #20: identifier "rx_byte" is undefined
+          uart_recv_buffer(rx_byte);
+..\Hardware\Uart.c(155): error:  #20: identifier "huart2" is undefined
+          HAL_UART_Receive_IT(&huart2, &rx_byte, 1);   /* 閲嶆柊鎸傝浇 */
+..\Hardware\Uart.c: 1 warning, 5 errors
+compiling MyCAN.c...
+..\Hardware\MyCAN.c(15): error:  #20: identifier "hcan" is undefined
+      HAL_CAN_ConfigFilter(&hcan, &filter);
+..\Hardware\MyCAN.c(27): error:  #20: identifier "hcan" is undefined
+      HAL_CAN_AddTxMessage(&hcan, &tx, Data, &mailbox);
+..\Hardware\MyCAN.c(32): error:  #20: identifier "hcan" is undefined
+  	return (HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RX_FIFO0) > 0) ? 1 : 0;
+..\Hardware\MyCAN.c(38): error:  #20: identifier "hcan" is undefined
+      HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &rx, Data);
+..\Hardware\MyCAN.c: 0 warnings, 4 errors
+compiling OLED.c...
+..\Hardware\OLED.c(11): warning:  #223-D: function "RCC_APB2PeriphClockCmd" declared implicitly
+      RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+..\Hardware\OLED.c(11): error:  #20: identifier "RCC_APB2Periph_GPIOB" is undefined
+      RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+..\Hardware\OLED.c(14): error:  #136: struct "<unnamed>"  has no field "GPIO_Mode"
+   	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+..\Hardware\OLED.c(14): error:  #20: identifier "GPIO_Mode_Out_OD" is undefined
+   	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+..\Hardware\OLED.c(15): error:  #136: struct "<unnamed>"  has no field "GPIO_Speed"
+  	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+..\Hardware\OLED.c(15): error:  #20: identifier "GPIO_Speed_50MHz" is undefined
+  	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+..\Hardware\OLED.c(16): error:  #136: struct "<unnamed>"  has no field "GPIO_Pin"
+  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+..\Hardware\OLED.c(16): error:  #20: identifier "GPIO_Pin_8" is undefined
+  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+..\Hardware\OLED.c(17): warning:  #223-D: function "GPIO_Init" declared implicitly
+   	GPIO_Init(GPIOB, &GPIO_InitStructure);
+..\Hardware\OLED.c(18): error:  #136: struct "<unnamed>"  has no field "GPIO_Pin"
+  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+..\Hardware\OLED.c(18): error:  #20: identifier "GPIO_Pin_9" is undefined
+  	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+..\Hardware\OLED.c: 2 warnings, 9 errors
+compiling main.c...
+../Core/Src/main.c(34): error:  #5: cannot open source input file "app/app_led.h": No such file or directory
+  #include "app/app_led.h"
+../Core/Src/main.c: 0 warnings, 1 error
+compiling isr.c...
+..\User\app\isr.c(2): error:  #5: cannot open source input file "app/isr.h": No such file or directory
+  #include "app/isr.h"
+..\User\app\isr.c: 0 warnings, 1 error
+compiling app_buzzer.c...
+..\User\app\app_buzzer.c(6): error:  #5: cannot open source input file "app/app_buzzer.h": No such file or directory
+  #include "app/app_buzzer.h"
+..\User\app\app_buzzer.c: 0 warnings, 1 error
+compiling app_alarm.c...
+..\User\app\app_alarm.c(8): error:  #5: cannot open source input file "app/app_led.h": No such file or directory
+  #include "app/app_led.h"
+..\User\app\app_alarm.c: 0 warnings, 1 error
+compiling app_uart.c...
+..\User\app\app_uart.c(10): error:  #5: cannot open source input file "app/app_led.h": No such file or directory
+  #include "app/app_led.h"
+..\User\app\app_uart.c: 0 warnings, 1 error
+compiling app_led.c...
+..\User\app\app_led.c(6): error:  #5: cannot open source input file "app/app_led.h": No such file or directory
+  #include "app/app_led.h"
+..\User\app\app_led.c: 0 warnings, 1 error
+compiling app_key.c...
+..\User\app\app_key.c(9): error:  #5: cannot open source input file "app/isr.h": No such file or directory
+  #include "app/isr.h"
+..\User\app\app_key.c: 0 warnings, 1 error
+"my_rtos_project\my_rtos_project.axf" - 25 Error(s), 3 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:04
