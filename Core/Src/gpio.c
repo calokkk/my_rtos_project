@@ -107,7 +107,8 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin : IR_Pin */
   GPIO_InitStruct.Pin = IR_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  /* 防浮空：PB10 紧邻软件 I2C 的 PB8/PB9，浮空时会被串扰出大量虚假边沿 */
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(IR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SCL_Pin SDA_Pin */

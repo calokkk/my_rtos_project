@@ -57,7 +57,6 @@
 /* External variables --------------------------------------------------------*/
 extern UART_HandleTypeDef huart2;
 /* USER CODE BEGIN EV */
-
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -178,17 +177,6 @@ void PendSV_Handler(void)
   /* USER CODE END PendSV_IRQn 1 */
 }
 
-/**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-  /* USER CODE END SysTick_IRQn 1 */
-}
 #endif
 
 /******************************************************************************/
@@ -197,6 +185,21 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles TIM1 update interrupt.
+  * @note  HAL 的 1ms 时基由 TIM1 提供，SysTick 完全交给 FreeRTOS。
+  */
+void TIM1_UP_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_UP_IRQn 0 */
+  if ((TIM1->SR & TIM_SR_UIF) != 0U)
+  {
+    TIM1->SR &= ~TIM_SR_UIF;
+    HAL_IncTick();
+  }
+  /* USER CODE END TIM1_UP_IRQn 0 */
+}
 
 /**
   * @brief This function handles EXTI line1 interrupt.

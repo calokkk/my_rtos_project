@@ -34,14 +34,17 @@ void LED_Task(void *arg)
         	{
 				case LED_ON:
 					LED2_ON();
+                    LED1_ON();
 					break;
 
 				case LED_OFF:
 					LED2_OFF();
+                    LED1_OFF();
 					break;
 
 				case LED_BLINK:
 					LED2_Turn();
+                    LED1_Turn();
 					break;
 
 				default:

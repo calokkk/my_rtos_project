@@ -4,7 +4,7 @@
 // 1. 内核配置
 #define configUSE_PREEMPTION            1       // 启用抢占式调度
 #define configUSE_IDLE_HOOK             0       // 禁用空闲钩子函数
-#define configUSE_TICK_HOOK             1       // 禁用tick钩子函数
+#define configUSE_TICK_HOOK             0       // 禁用tick钩子函数（HAL 时基已改由 TIM6 提供）
 #define configCPU_CLOCK_HZ              (72000000) // STM32系统时钟（F103为72MHz）
 #define configTICK_RATE_HZ              (1000)  // Tick频率（1ms/tick）
 #define configMAX_PRIORITIES            (16)    // 最大任务优先级（0最低，15最高）
@@ -23,14 +23,14 @@
 #define configUSE_TIMERS                1       // 启用软件定时器
 #define configTIMER_TASK_PRIORITY       (configMAX_PRIORITIES - 1) // 定时器任务优先级
 #define configTIMER_QUEUE_LENGTH        10      // 定时器命令队列长度
-#define configTIMER_TASK_STACK_DEPTH    (256) // 定时器任务栈大小（按键判定回调在定时器上下文调用OLED，需余量）
+#define configTIMER_TASK_STACK_DEPTH    (384) // 定时器任务栈大小（回调中会调 uart_printf，vsnprintf 开销大，256 不够）
 #define configQUEUE_REGISTRY_SIZE       0       // 禁用队列注册
 #define configUSE_MUTEXES               1       // 启用互斥锁
 #define configUSE_RECURSIVE_MUTEXES     1       // 启用递归互斥锁
 #define configUSE_COUNTING_SEMAPHORES   1       // 启用计数信号量
 
 // 4. 钩子函数配置
-#define configCHECK_FOR_STACK_OVERFLOW  0       // 禁用栈溢出检测
+#define configCHECK_FOR_STACK_OVERFLOW  2       // 启用栈溢出检测（方法2：栈指针+尾部魔数，见 main.c 的钩子）
 
 // 5. 系统调用宏（必须定义）
 #define INCLUDE_vTaskPrioritySet        1
@@ -41,7 +41,11 @@
 #define INCLUDE_vTaskDelayUntil         1
 #define INCLUDE_vTaskDelay              1
 
-// 6.中断服务函数映射（让FreeRTOS接管SysTick/PendSV/SVC中断）
+// 6.中断服务函数映射（FreeRTOS 接管 SysTick / PendSV / SVC 中断向量）
+//    前提：HAL 时基已由 Core/Src/tim.c 改为 TIM6（见 MX_TIM6_Init），
+//    SysTick 不再被 HAL 占用，可完整交给 FreeRTOS。
+//    注意：Core/Src/stm32f1xx_it.c 中不得再定义 SysTick_Handler，
+//    否则会与 port.c 里经宏展开后的 xPortSysTickHandler 重复定义。
 #define xPortSysTickHandler SysTick_Handler
 #define xPortPendSVHandler PendSV_Handler
 #define vPortSVCHandler SVC_Handler

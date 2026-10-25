@@ -121,6 +121,8 @@ static void enter_alarm_state(ALARM_MODE_E *mode, uint8_t *countdown)
     xTimerReset(xTick1sTimer, 0);  /* 对齐滴答 */
     LED_SendCmd(LED_BLINK);
     Buzzer_SendCmd(BUZZER_CMD_BEEP_ALARM);
+    OLED_Clear();
+    OLED_ShowString(1, 1, "det IR signal:");
     uart_printf("[Alarm] IR triggered! ALARM!\r\n");
 }
 
@@ -169,6 +171,9 @@ void Alarm_Task(void *arg)
                         xTimerReset(xTick1sTimer, 0);  /* 对齐滴答 */
                         LED_SendCmd(LED_BLINK);
                         uart_printf("[Alarm] Arming... %ds\r\n", countdown);
+                        OLED_ShowString(1, 1, "start after:");
+                        OLED_Clear();
+                        OLED_ShowNum(2, 1, countdown, 1);
                         break;
 
                     case ALARM_EVT_KEY1_LONG:
@@ -195,6 +200,9 @@ void Alarm_Task(void *arg)
                     if (countdown > 0)
                     {
                         countdown--;
+                        OLED_Clear();
+                        OLED_ShowString(1, 1, "start after:");
+                        OLED_ShowNum(2, 1, countdown, 1);
                         uart_printf("[Alarm] Arming... %ds\r\n", countdown);
                     }
                     if (countdown == 0)
@@ -213,6 +221,8 @@ void Alarm_Task(void *arg)
                     mode = ALARM_MODE_DISARMED;
                     LED_SendCmd(LED_OFF);
                     Buzzer_SendCmd(BUZZER_CMD_OFF);
+                    OLED_Clear();
+                    OLED_ShowString(1, 1, "Armed:");
                     uart_printf("[Alarm] Disarmed\r\n");
                 }
                 else if (evt == ALARM_EVT_KEY1_LONG)
@@ -266,6 +276,9 @@ void Alarm_Task(void *arg)
                     /* 人体再次出现 → 重置倒计时 */
                     ir_status = 1;
                     countdown = ALARM_TIMEOUT_SEC;
+                    OLED_Clear();
+                    OLED_ShowString(1, 1, "det IR in period:");
+                    OLED_ShowString(2, 1, "reset countdown:");
                 }
                 else if (evt == ALARM_EVT_TICK_1S)
                 {
@@ -281,6 +294,8 @@ void Alarm_Task(void *arg)
                         if (countdown > 0)
                         {
                             countdown--;
+                            OLED_ShowString(1, 1, "det No_IR signal:");
+                            OLED_ShowNum(2, 1, countdown, 1);
                             uart_printf("[Alarm] IR clear, %ds to disarm\r\n",
                                         countdown);
                         }

@@ -41,6 +41,7 @@ void OLED2_Task(void *arg)
 {
 	KEY_INFO_T event;
 
+	OLED_ShowString(1, 1, "chenzong dog");
 	while(1)
 	{
 		if(xQueueReceive(xKeyEventQueue, &event, portMAX_DELAY))

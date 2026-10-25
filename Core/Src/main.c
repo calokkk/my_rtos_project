@@ -105,7 +105,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  /* TIM1 的 1ms 时基已由 HAL_RCC_ClockConfig() 自动重新校准，无需额外调用 */
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -116,6 +116,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   MyCAN_Init();          /* 滤波器配置，CubeMX 没生成 */
   uart_init();           /* 打开接收中断 */
+  OLED_Init();
   app_led_init();
   app_buzzer_init();
   app_alarm_init();
@@ -185,9 +186,20 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void vApplicationTickHook(void)
+/**
+ * @brief 栈溢出钩子（configCHECK_FOR_STACK_OVERFLOW = 2 时必须实现）
+ * @note  刻意只调用 uart_send_string 而不用 uart_printf：
+ *        此处栈已被破坏，不能再使用 vsnprintf 这类开销大的函数。
+ */
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
 {
-    HAL_IncTick();
+    (void)xTask;
+    uart_send_string("\r\n[!!] STACK OVERFLOW: ");
+    uart_send_string(pcTaskName);
+    uart_send_string("\r\n");
+    for (;;)
+    {
+    }
 }
 /* USER CODE END 4 */
 
